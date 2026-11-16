@@ -1,0 +1,509 @@
+<title>Simulator Automata Perpustakaan</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap">
+<style>
+:root {
+  --bg: #f4f7f9;
+  --surface: #ffffff;
+  --fg: #1a2430;
+  --muted: #566475;
+  --line: #7f8c9c;
+  --border: #d3dbe3;
+  --accent: #17617f;
+  --accent-fg: #ffffff;
+  --accent-soft: #e2f0f6;
+  --now: #ffd166;
+  --seen: #d3e9f3;
+  --ok-fill: #bfe8cf;
+  --ok: #1d7a43;
+  --bad-fill: #f6c7c7;
+  --bad: #c23a3a;
+  --use: #d96f00;
+  --elabel: #17617f;
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-head: "Space Grotesk", "Inter", system-ui, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Mono", "SF Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e141a;
+    --surface: #161e27;
+    --fg: #e5eaf0;
+    --muted: #94a1b1;
+    --line: #75828f;
+    --border: #2a3644;
+    --accent: #66bad8;
+    --accent-fg: #07202b;
+    --accent-soft: #1a3340;
+    --now: #8a6a12;
+    --seen: #1e3a4a;
+    --ok-fill: #1f5a38;
+    --ok: #62d08e;
+    --bad-fill: #6a2a2a;
+    --bad: #ff8c8c;
+    --use: #ffa94d;
+    --elabel: #8fd0e8;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e141a;
+  --surface: #161e27;
+  --fg: #e5eaf0;
+  --muted: #94a1b1;
+  --line: #75828f;
+  --border: #2a3644;
+  --accent: #66bad8;
+  --accent-fg: #07202b;
+  --accent-soft: #1a3340;
+  --now: #8a6a12;
+  --seen: #1e3a4a;
+  --ok-fill: #1f5a38;
+  --ok: #62d08e;
+  --bad-fill: #6a2a2a;
+  --bad: #ff8c8c;
+  --use: #ffa94d;
+  --elabel: #8fd0e8;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.5;
+  padding-block: 20px 32px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 1280px; margin: 0 auto; display: grid; gap: 16px; }
+header h1 { font-family: var(--font-head); font-size: 24px; line-height: 1.2; margin: 0; text-wrap: balance; }
+header p { margin: 4px 0 0; color: var(--muted); max-width: 70ch; }
+.layout { display: grid; grid-template-columns: minmax(0, 380px) minmax(0, 1fr); gap: 16px; align-items: start; }
+@media (max-width: 920px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+.panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px; display: grid; gap: 12px; min-width: 0; grid-template-columns: minmax(0, 1fr); }
+.panel > * { min-width: 0; }
+label.cap, .cap { font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+#teks {
+  width: 100%;
+  font: 600 18px var(--font-mono);
+  letter-spacing: 0.08em;
+  padding: 9px 11px;
+  color: var(--fg);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+#teks:focus-visible, button:focus-visible, [role="tab"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+button {
+  font: 500 13px var(--font-body);
+  color: var(--fg);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 7px 10px;
+  cursor: pointer;
+  min-width: 0;
+}
+button:hover { border-color: var(--accent); }
+button.utama { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+.simbol { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.simbol button { text-align: left; padding: 6px 8px; font-size: 12px; line-height: 1.3; }
+.simbol b { font-family: var(--font-mono); font-size: 14px; color: var(--accent); margin-right: 5px; }
+.baris { display: flex; flex-wrap: wrap; gap: 6px; }
+.baris button { flex: 1 1 auto; }
+.centang { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; }
+.centang input { margin-top: 3px; }
+.hasil { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; min-height: 40px; }
+.pil { font: 700 18px var(--font-head); letter-spacing: 0.04em; padding: 5px 14px; border-radius: 999px; }
+.pil.ok { background: var(--ok-fill); color: var(--ok); }
+.pil.bad { background: var(--bad-fill); color: var(--bad); }
+.pil.diam { background: var(--accent-soft); color: var(--muted); font-size: 13px; font-weight: 600; }
+#status { color: var(--muted); font-size: 13px; }
+#log { margin: 0; padding: 0; list-style: none; max-height: 230px; overflow: auto; font: 12px/1.55 var(--font-mono); background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; min-height: 64px; }
+#log li { padding: 1px 0; overflow-wrap: anywhere; }
+#log li.tolak { color: var(--bad); }
+#log li.hasil-akhir { font-weight: 600; margin-top: 4px; }
+#log li.kosong { color: var(--muted); }
+#contoh { display: flex; flex-wrap: wrap; gap: 6px; max-height: 190px; overflow: auto; }
+#contoh button { font: 12px var(--font-mono); padding: 4px 8px; }
+#contoh button.ok::before { content: "✔ "; color: var(--ok); }
+#contoh button.bad::before { content: "✘ "; color: var(--bad); }
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin: -4px 0 0; flex-wrap: wrap; }
+[role="tab"] { border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: none; padding: 8px 12px; color: var(--muted); font-weight: 600; }
+[role="tab"][aria-selected="true"] { color: var(--accent); border-bottom-color: var(--accent); }
+.scroll { overflow-x: auto; }
+#peta { display: block; width: 100%; min-width: 680px; height: auto; }
+#peta text { font-family: var(--font-body); }
+.n circle.luar { fill: var(--surface); stroke: var(--fg); stroke-width: 2; }
+.n circle.dalam { fill: none; stroke: var(--fg); stroke-width: 1.5; }
+.n.lewat circle.luar { fill: var(--seen); }
+.n.skrg circle.luar { fill: var(--now); }
+.n.akhir-ok circle.luar { fill: var(--ok-fill); }
+.n.mati circle.luar { fill: var(--bad-fill); }
+.n.qd circle.luar { stroke: var(--line); stroke-dasharray: 5 4; }
+.n text { fill: var(--fg); font-size: 13px; font-weight: 500; text-anchor: middle; dominant-baseline: central; }
+.e line { stroke: var(--line); stroke-width: 1.6; }
+.e polygon { fill: var(--line); }
+.e text { fill: var(--elabel); font-size: 15px; font-weight: 700; text-anchor: middle; dominant-baseline: central; }
+.e.pakai line { stroke: var(--use); stroke-width: 4; }
+.e.pakai polygon { fill: var(--use); }
+.e.pakai text { fill: var(--use); }
+.mulai line { stroke: var(--fg); stroke-width: 2; }
+.mulai polygon { fill: var(--fg); }
+.legenda { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; color: var(--muted); }
+.legenda i { display: inline-block; width: 12px; height: 12px; border-radius: 50%; border: 1.5px solid var(--fg); margin-right: 5px; vertical-align: -2px; }
+.legenda i.garis { border-radius: 2px; border: 0; height: 4px; width: 18px; background: var(--use); vertical-align: 2px; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+th { font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+td.m { font-family: var(--font-mono); font-weight: 600; }
+tr.sekunder td { color: var(--muted); }
+pre.re { font: 600 16px var(--font-mono); background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px; overflow-x: auto; margin: 0; }
+.dua { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 700px) { .dua { grid-template-columns: minmax(0, 1fr); } }
+h2 { font: 700 15px var(--font-head); margin: 0 0 6px; }
+[hidden] { display: none !important; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Simulator Automata Perpustakaan</h1>
+    <p>Satu sesi peminjaman buku sebagai bahasa formal: Regular Expression, Finite Automata, Transition Graph, dan tabel transisi. Susun rangkaian aktivitas, lalu jalankan.</p>
+  </header>
+
+  <div class="layout">
+    <section class="panel" aria-label="Kontrol simulasi">
+      <div>
+        <label class="cap" for="teks">Rangkaian aktivitas</label>
+        <input id="teks" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="contoh: MVSBAPTZ" value="MVSBAPTZ">
+      </div>
+      <div class="simbol" id="simbol"></div>
+      <div class="baris">
+        <button id="hapus" type="button">⌫ Hapus</button>
+        <button id="kosong" type="button">Kosongkan</button>
+      </div>
+      <label class="centang"><input type="checkbox" id="langka"> <span>Mode pengembangan: buku langka wajib izin pustakawan (simbol H dan I)</span></label>
+      <div class="baris">
+        <button id="langkah" class="utama" type="button">Langkah ▶</button>
+        <button id="otomatis" type="button">Otomatis</button>
+        <button id="langsung" type="button">Langsung</button>
+        <button id="reset" type="button">Reset</button>
+      </div>
+      <div class="hasil"><span id="pil" class="pil diam">Belum dijalankan</span></div>
+      <div id="status" aria-live="polite"></div>
+      <div>
+        <div class="cap" style="margin-bottom:6px">Jejak simulasi</div>
+        <ol id="log" aria-live="polite"></ol>
+      </div>
+      <div>
+        <div class="cap" style="margin-bottom:6px">Contoh string (klik untuk memakai)</div>
+        <div id="contoh"></div>
+      </div>
+    </section>
+
+    <section class="panel" aria-label="Hasil visual">
+      <div class="tabs" role="tablist">
+        <button role="tab" id="t-graf" aria-selected="true" aria-controls="p-graf" type="button">Transition Graph</button>
+        <button role="tab" id="t-tabel" aria-selected="false" aria-controls="p-tabel" type="button">Tabel Transisi</button>
+        <button role="tab" id="t-re" aria-selected="false" aria-controls="p-re" type="button">RE dan Alfabet</button>
+      </div>
+      <div id="p-graf" role="tabpanel" aria-labelledby="t-graf">
+        <div class="scroll"><svg id="peta" role="img" aria-label="Transition Graph peminjaman buku"></svg></div>
+        <div class="legenda">
+          <span><i style="background:var(--now)"></i>state sekarang</span>
+          <span><i style="background:var(--seen)"></i>sudah dilewati</span>
+          <span><i style="background:var(--ok-fill)"></i>state akhir tercapai</span>
+          <span><i style="background:var(--bad-fill)"></i>dead state</span>
+          <span><i class="garis"></i>transisi yang dipakai</span>
+          <span>Transisi yang tidak digambar menuju qd.</span>
+        </div>
+      </div>
+      <div id="p-tabel" role="tabpanel" aria-labelledby="t-tabel" hidden>
+        <div class="scroll"><table id="tabel"></table></div>
+      </div>
+      <div id="p-re" role="tabpanel" aria-labelledby="t-re" hidden>
+        <h2>Regular Expression</h2>
+        <pre class="re" id="re"></pre>
+        <div class="dua" style="margin-top:14px">
+          <div><h2>Alfabet</h2><div class="scroll"><table id="tabel-alfabet"></table></div></div>
+          <div><h2>State</h2><div class="scroll"><table id="tabel-state"></table></div></div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script>
+var ALF = {M:"Masuk",X:"Akses ditolak",V:"Validasi sah",S:"Cari buku",B:"Pilih buku",U:"Tidak tersedia",Q:"Reservasi",A:"Tersedia",G:"Ada denda",Y:"Bayar denda",P:"Pinjam",E:"Perpanjang",T:"Kembalikan",W:"Terlambat",Z:"Selesai"};
+var ALF_L = {H:"Buku langka",I:"Izin pustakawan"};
+var RE_U = "M(X|VSB(USB)*(UQ|A(GY)?P(EE?)?T(WY)?Z))";
+var RE_L = "M(X|VSB(USB)*(UQ|A(HI)?(GY)?P(EE?)?T(WY)?Z))";
+var AWAL = "q0", MATI = "qd", AKHIR = ["qX","qQ","qZ"];
+var TR_U = {
+  q0:{M:"q1"}, q1:{X:"qX",V:"q2"}, q2:{S:"q3"}, q3:{B:"q4"}, q4:{U:"q5",A:"q6"},
+  q5:{S:"q3",Q:"qQ"}, q6:{G:"q7",P:"q9"}, q7:{Y:"q8"}, q8:{P:"q9"},
+  q9:{E:"q10",T:"q12"}, q10:{E:"q11",T:"q12"}, q11:{T:"q12"},
+  q12:{W:"q13",Z:"qZ"}, q13:{Y:"q14"}, q14:{Z:"qZ"}
+};
+var TR_L = JSON.parse(JSON.stringify(TR_U));
+TR_L.q6 = {H:"qH",G:"q7",P:"q9"};
+TR_L.qH = {I:"q6b"};
+TR_L.q6b = {G:"q7",P:"q9"};
+var ARTI = {
+  q0:"Awal, belum login", q1:"Sudah login, menunggu validasi", q2:"Anggota sah, siap mencari",
+  q3:"Sudah mencari, menunggu pilihan buku", q4:"Buku dipilih, menunggu status ketersediaan",
+  q5:"Buku tidak tersedia: cari lagi atau reservasi", q6:"Buku tersedia: cek denda atau pinjam",
+  q7:"Ada denda, wajib bayar", q8:"Denda lunas, wajib pinjam", q9:"Sudah meminjam: perpanjang atau kembalikan",
+  q10:"Perpanjangan ke-1", q11:"Perpanjangan ke-2 (batas), hanya boleh kembalikan",
+  q12:"Buku kembali: terlambat atau selesai", q13:"Terlambat, wajib bayar denda",
+  q14:"Denda keterlambatan lunas, wajib selesai", qX:"AKHIR: akses ditolak", qQ:"AKHIR: reservasi",
+  qZ:"AKHIR: sesi selesai", qd:"DEAD STATE: melanggar prosedur", qH:"Buku langka, wajib minta izin",
+  q6b:"Izin diberikan: cek denda atau pinjam"
+};
+var POS = {
+  q0:[0,1], q1:[1,1], qX:[1,0], q2:[2,1], q3:[3,1], q4:[4,1], q5:[4,2.2], qQ:[4,3.4],
+  q6:[5,1], q7:[5,2.2], q8:[6,2.2], q9:[6,1], q10:[7,1], q11:[8,1], q12:[7,2.2],
+  qZ:[8,2.2], q13:[7,3.4], q14:[8,3.4], qH:[5,0], q6b:[6,0], qd:[1,3.4]
+};
+var CONTOH_U = ["MVSBAPTZ","MVSBUSBAPETZ","MVSBAGYPEETWYZ","MVSBUQ","MX","MVSBUSBUSBUQ","MVSBAPT","MVBAPTZ","MVSBAPZ","MVSBAPEEETZ","MVSBAPTWZ","MVSBAGPTZ","MVSBUZ","MVSBAPTZS","MXV"];
+var CONTOH_L = ["MVSBAHIPTZ","MVSBAHIGYPETZ","MVSBUSBAHIPEETWYZ","MVSBAHPTZ","MVSBAIPTZ","MVSBAHIHIPTZ"];
+
+var langka = false, teks = "", jejak = [], idx = 0, timer = null, diterima = false, alasan = "";
+var SK = 100, R = 22, X0 = 70, Y0 = 40;
+
+function trans() { return langka ? TR_L : TR_U; }
+function alfabet() { return langka ? Object.assign({}, ALF, ALF_L) : ALF; }
+function teksRe() { return langka ? RE_L : RE_U; }
+function pindah(q, c) { var t = trans()[q]; return (t && t[c]) ? t[c] : MATI; }
+function boleh(q) { return Object.keys(trans()[q] || {}).sort(); }
+function cocokRe(s) { return new RegExp("^(?:" + teksRe() + ")$").test(s); }
+
+function alasanTolak(q, c) {
+  if (AKHIR.indexOf(q) >= 0) return "Ada aktivitas '" + c + "' setelah sesi berakhir (" + q + ")";
+  if (!(c in alfabet())) return "Simbol '" + c + "' tidak ada di alfabet";
+  var b = boleh(q).join(", ") || "tidak ada";
+  return "Di " + q + " (" + (ARTI[q] || "") + ") yang boleh hanya: " + b + ". Datang: '" + c + "'";
+}
+
+function periksa(s) {
+  var q = AWAL, j = [AWAL], a = "";
+  for (var i = 0; i < s.length; i++) {
+    var n = pindah(q, s[i]);
+    if (n === MATI && q !== MATI && !a) a = alasanTolak(q, s[i]);
+    q = n;
+    j.push(q);
+  }
+  var ok = AKHIR.indexOf(q) >= 0;
+  if (ok) a = "Berhenti di state akhir " + q + " (" + ARTI[q] + ")";
+  else if (!a) a = "Berhenti di " + q + " (" + (ARTI[q] || "") + ") yang bukan state akhir";
+  return { ok: ok, jejak: j, alasan: a };
+}
+
+function el(id) { return document.getElementById(id); }
+function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+function titik(q) { return [POS[q][0] * SK + X0, POS[q][1] * SK + Y0]; }
+
+function gambar() {
+  var t = trans(), semua = {};
+  Object.keys(t).forEach(function (a) { semua[a] = 1; Object.keys(t[a]).forEach(function (c) { semua[t[a][c]] = 1; }); });
+  semua[MATI] = 1;
+  var sisi = "", node = "";
+  Object.keys(t).forEach(function (a) {
+    Object.keys(t[a]).forEach(function (c) {
+      var b = t[a][c], p = titik(a), q = titik(b);
+      var dx = q[0] - p[0], dy = q[1] - p[1], L = Math.hypot(dx, dy), ux = dx / L, uy = dy / L;
+      var x1 = p[0] + ux * R, y1 = p[1] + uy * R, x2 = q[0] - ux * R, y2 = q[1] - uy * R;
+      var nx = -uy, ny = ux;
+      var pts = [x2, y2, x2 - ux * 11 + nx * 5, y2 - uy * 11 + ny * 5, x2 - ux * 11 - nx * 5, y2 - uy * 11 - ny * 5].map(function (v) { return v.toFixed(1); });
+      var lx = (x1 + x2) / 2 + nx * 13, ly = (y1 + y2) / 2 + ny * 13;
+      sisi += '<g class="e" id="e-' + a + '-' + c + '"><line x1="' + x1.toFixed(1) + '" y1="' + y1.toFixed(1) + '" x2="' + x2.toFixed(1) + '" y2="' + y2.toFixed(1) + '"/><polygon points="' + pts[0] + "," + pts[1] + " " + pts[2] + "," + pts[3] + " " + pts[4] + "," + pts[5] + '"/><text x="' + lx.toFixed(1) + '" y="' + ly.toFixed(1) + '">' + c + "</text></g>";
+    });
+  });
+  Object.keys(semua).forEach(function (q) {
+    var p = titik(q), fin = AKHIR.indexOf(q) >= 0;
+    node += '<g class="n' + (q === MATI ? " qd" : "") + '" id="n-' + q + '"><circle class="luar" cx="' + p[0] + '" cy="' + p[1] + '" r="' + R + '"/>' + (fin ? '<circle class="dalam" cx="' + p[0] + '" cy="' + p[1] + '" r="' + (R - 5) + '"/>' : "") + '<text x="' + p[0] + '" y="' + p[1] + '">' + q + "</text></g>";
+  });
+  var s = titik(AWAL);
+  var mulai = '<g class="mulai"><line x1="' + (s[0] - R - 34) + '" y1="' + s[1] + '" x2="' + (s[0] - R) + '" y2="' + s[1] + '"/><polygon points="' + (s[0] - R) + "," + s[1] + " " + (s[0] - R - 10) + "," + (s[1] - 5) + " " + (s[0] - R - 10) + "," + (s[1] + 5) + '"/></g>';
+  var W = 8 * SK + X0 + 50, H = 3.4 * SK + Y0 + 40;
+  var svg = el("peta");
+  svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+  svg.innerHTML = sisi + mulai + node;
+}
+
+function sorot() {
+  document.querySelectorAll("#peta .n").forEach(function (g) { g.setAttribute("class", "n" + (g.id === "n-qd" ? " qd" : "")); });
+  document.querySelectorAll("#peta .e").forEach(function (g) { g.setAttribute("class", "e"); });
+  var j = jejak.length ? jejak : [AWAL];
+  for (var i = 0; i <= idx && i < j.length; i++) {
+    var g = el("n-" + j[i]);
+    if (g) g.classList.add("lewat");
+  }
+  for (var k = 0; k < idx; k++) {
+    var e = el("e-" + jejak[k] + "-" + teks[k]);
+    if (e) e.classList.add("pakai");
+  }
+  var now = el("n-" + j[Math.min(idx, j.length - 1)]);
+  if (now) {
+    var nama = j[Math.min(idx, j.length - 1)];
+    now.classList.add(nama === MATI ? "mati" : (AKHIR.indexOf(nama) >= 0 ? "akhir-ok" : "skrg"));
+  }
+}
+
+function setPil(teksPil, kelas) {
+  var p = el("pil");
+  p.textContent = teksPil;
+  p.className = "pil " + kelas;
+}
+
+function resetSim() {
+  clearInterval(timer);
+  timer = null;
+  el("otomatis").textContent = "Otomatis";
+  teks = "";
+  jejak = [];
+  idx = 0;
+  el("log").innerHTML = '<li class="kosong">Tekan Langkah atau Otomatis untuk memulai.</li>';
+  setPil("Belum dijalankan", "diam");
+  el("status").textContent = "State sekarang: " + AWAL + " (" + ARTI[AWAL] + ")";
+  sorot();
+}
+
+function tambahLog(t, kelas) {
+  var log = el("log");
+  if (log.firstChild && log.firstChild.className === "kosong") log.innerHTML = "";
+  var li = document.createElement("li");
+  li.textContent = t;
+  if (kelas) li.className = kelas;
+  log.appendChild(li);
+  log.scrollTop = log.scrollHeight;
+}
+
+function langkah() {
+  if (idx === 0) {
+    teks = el("teks").value.trim();
+    if (!teks) { setPil("Isi rangkaian dulu", "diam"); clearInterval(timer); timer = null; el("otomatis").textContent = "Otomatis"; return; }
+    var h = periksa(teks);
+    diterima = h.ok; jejak = h.jejak; alasan = h.alasan;
+    el("log").innerHTML = "";
+    setPil("Memproses…", "diam");
+  }
+  if (idx >= teks.length) { clearInterval(timer); timer = null; return; }
+  var c = teks[idx], a = jejak[idx], b = jejak[idx + 1];
+  idx++;
+  tambahLog(idx + ". baca " + c + " (" + (alfabet()[c] || "?") + "):  " + a + " → " + b);
+  if (b === MATI && a !== MATI) tambahLog("   ditolak: " + alasanTolak(a, c), "tolak");
+  sorot();
+  el("status").textContent = "State sekarang: " + b + " (" + (ARTI[b] || "") + ")";
+  if (idx === teks.length) selesai();
+}
+
+function selesai() {
+  clearInterval(timer);
+  timer = null;
+  el("otomatis").textContent = "Otomatis";
+  setPil(diterima ? "DITERIMA" : "DITOLAK", diterima ? "ok" : "bad");
+  tambahLog("Hasil: " + alasan, "hasil-akhir");
+  tambahLog("Cek dengan RE: string " + (cocokRe(teks) ? "cocok" : "tidak cocok") + " dengan RE");
+}
+
+function otomatis() {
+  if (timer) { clearInterval(timer); timer = null; el("otomatis").textContent = "Otomatis"; return; }
+  if (idx > 0 && idx >= teks.length) resetSim();
+  el("otomatis").textContent = "Jeda";
+  timer = setInterval(langkah, 800);
+}
+
+function langsung() {
+  resetSim();
+  var n = Math.max(el("teks").value.trim().length, 1);
+  for (var i = 0; i < n; i++) langkah();
+}
+
+function bangunSimbol() {
+  var h = "";
+  Object.keys(alfabet()).forEach(function (k) { h += '<button type="button" data-s="' + k + '"><b>' + k + "</b>" + esc(alfabet()[k]) + "</button>"; });
+  el("simbol").innerHTML = h;
+}
+
+function bangunContoh() {
+  var daftar = langka ? CONTOH_U.concat(CONTOH_L) : CONTOH_U, h = "";
+  daftar.forEach(function (s) { h += '<button type="button" class="' + (periksa(s).ok ? "ok" : "bad") + '" data-c="' + s + '">' + s + "</button>"; });
+  el("contoh").innerHTML = h;
+}
+
+function bangunTabel() {
+  var t = trans(), h = "<tr><th>State saat ini</th><th>Input</th><th>State berikut</th><th>Keterangan state asal</th></tr>";
+  Object.keys(t).forEach(function (a) {
+    Object.keys(t[a]).forEach(function (c) {
+      h += '<tr><td class="m">' + a + (a === AWAL ? " (awal)" : "") + '</td><td class="m">' + c + '</td><td class="m">' + t[a][c] + "</td><td>" + esc(ARTI[a]) + "</td></tr>";
+    });
+  });
+  h += '<tr class="sekunder"><td class="m">qX, qQ, qZ</td><td>semua simbol</td><td class="m">qd</td><td>Tidak boleh ada aktivitas setelah sesi berakhir</td></tr>';
+  h += '<tr class="sekunder"><td>state lain</td><td>simbol yang tidak tercantum</td><td class="m">qd</td><td>Melanggar prosedur</td></tr>';
+  h += '<tr class="sekunder"><td class="m">qd</td><td>semua simbol</td><td class="m">qd</td><td>Dead state, tidak bisa keluar</td></tr>';
+  el("tabel").innerHTML = h;
+}
+
+function bangunInfo() {
+  el("re").textContent = teksRe();
+  var a = "<tr><th>Simbol</th><th>Aktivitas</th></tr>";
+  Object.keys(alfabet()).forEach(function (k) { a += '<tr><td class="m">' + k + "</td><td>" + esc(alfabet()[k]) + "</td></tr>"; });
+  el("tabel-alfabet").innerHTML = a;
+  var s = "<tr><th>State</th><th>Arti</th></tr>";
+  Object.keys(ARTI).forEach(function (q) {
+    if (q === "qH" || q === "q6b") { if (!langka) return; }
+    s += '<tr><td class="m">' + q + "</td><td>" + esc(ARTI[q]) + "</td></tr>";
+  });
+  el("tabel-state").innerHTML = s;
+}
+
+function muat() {
+  gambar();
+  bangunSimbol();
+  bangunContoh();
+  bangunTabel();
+  bangunInfo();
+  resetSim();
+}
+
+function pilihTab(id) {
+  ["graf", "tabel", "re"].forEach(function (k) {
+    var aktif = k === id;
+    el("t-" + k).setAttribute("aria-selected", aktif ? "true" : "false");
+    el("p-" + k).hidden = !aktif;
+  });
+}
+
+el("simbol").addEventListener("click", function (e) {
+  var b = e.target.closest("button");
+  if (b) { el("teks").value += b.dataset.s; resetSim(); }
+});
+el("contoh").addEventListener("click", function (e) {
+  var b = e.target.closest("button");
+  if (b) { el("teks").value = b.dataset.c; resetSim(); }
+});
+el("teks").addEventListener("input", function (e) {
+  var v = e.target.value.toUpperCase();
+  if (v !== e.target.value) e.target.value = v;
+  resetSim();
+});
+el("hapus").addEventListener("click", function () { var t = el("teks"); t.value = t.value.slice(0, -1); resetSim(); });
+el("kosong").addEventListener("click", function () { el("teks").value = ""; resetSim(); });
+el("langkah").addEventListener("click", langkah);
+el("otomatis").addEventListener("click", otomatis);
+el("langsung").addEventListener("click", langsung);
+el("reset").addEventListener("click", resetSim);
+el("langka").addEventListener("change", function (e) {
+  langka = e.target.checked;
+  el("teks").value = "";
+  muat();
+});
+["graf", "tabel", "re"].forEach(function (k) { el("t-" + k).addEventListener("click", function () { pilihTab(k); }); });
+
+muat();
+langsung();
+</script>
